@@ -1,38 +1,49 @@
-export function blackjackHighest(dealedCards : Array<string>) {
-  let score : number = 0;
-  let highest : string;
+import { initializeCards, Card } from "./CardDetails";
 
-  interface Card {
-    name : string,
-    score : number,
-    rank : number
-  }
+function calculateScore(cardArray : Array<Card>) {
+  let totalScore = 0;
+  let highestCard = cardArray[0];
 
-  const cardValues : Record<string, Object> = {
-    "two" : {score: 2, rank: 2},
-    "three" : {score: 3, rank: 3},
-    "four" : {score: 4, rank: 4},
-    "five" : {score: 5, rank: 5},
-    "six" : {score: 6, rank: 6},
-    "seven" : {score: 7, rank: 7},
-    "eight" : {score: 8, rank: 8},
-    "nine" : {score: 9, rank: 9},
-    "ten" : {score: 10, rank: 10},
-    "jack" : {score: 10, rank: 11},
-    "queen" : {score: 10, rank: 12},
-    "king" : {score: 10, rank: 13},
-    "ace" : {score: 11, rank: 14},
-  }
-
-  let cardsOnTable : Array<Card> = dealedCards.map(
-    (card) => {
-      {
-        name : card,
-        score : cardValues[card].score,
-        rank : cardValues[card].rank,
+  for (const card of cardArray) {
+      totalScore += card.score;
+      if (card.rank > highestCard.rank) {
+        highestCard = card;
       }
     }
-  )
+  
+  return { totalScore, highestCard };
+}
 
-  return (`${result} ${highest}`)
+function checkScore(totalScore : number, highestCard : Card, cardsOnTable : Array<Card>) {
+  let result = "below";
+
+  if (totalScore === 21) {
+    result = "blackjack";
+    return (`${result} ${highestCard.name}`);
+  }
+  if (totalScore > 21) {
+    if (highestCard.rank !== 14) {
+      result = "above";
+      return (`${result} ${highestCard.name}`);
+    }
+
+    const aceToChange = cardsOnTable.find((card : Card) => card.rank === 14);
+    if (aceToChange) {
+      aceToChange.score = 1;
+      aceToChange.rank = 1;
+    }
+
+    ({ totalScore, highestCard } = calculateScore(cardsOnTable));
+    return checkScore(totalScore, highestCard, cardsOnTable);
+  }
+
+  return (`${result} ${highestCard.name}`);
+}
+
+export function blackjackHighest(dealedCards : Array<string>) {
+  const cardsOnTable = initializeCards(dealedCards);
+  
+  const { totalScore, highestCard } = calculateScore(cardsOnTable);
+  
+  return checkScore(totalScore, highestCard, cardsOnTable);
 }
